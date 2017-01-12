@@ -1,3 +1,6 @@
+"""
+notes about models is written in model.py
+"""
 from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
@@ -11,8 +14,8 @@ import tensorflow as tf
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
-from entity_networks.model import model_fn
-from entity_networks.dataset import Dataset
+from TensorflowVersion.entity_networks.model import model_fn
+from TensorflowVersion.entity_networks.dataset import Dataset
 
 FLAGS = tf.app.flags.FLAGS
 

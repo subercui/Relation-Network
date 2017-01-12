@@ -1,4 +1,7 @@
 # coding=utf-8
+"""
+a_keys and b_keys are now just simply initialized as j random vectors
+"""
 from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
@@ -8,9 +11,9 @@ import tensorflow as tf
 
 from functools import partial
 
-from entity_networks.activations import prelu
-from entity_networks.dynamic_memory_cell import DynamicMemoryCell
-from entity_networks.model_utils import get_sequence_length
+from TensorflowVersion.entity_networks.activations import prelu
+from TensorflowVersion.entity_networks.dynamic_memory_cell import DynamicMemoryCell
+from TensorflowVersion.entity_networks.model_utils import get_sequence_length
 
 def model_fn(features, labels, params, mode, scope=None):
     embedding_size = params['embedding_size']
@@ -45,16 +48,20 @@ def model_fn(features, labels, params, mode, scope=None):
         query_embedding = tf.nn.embedding_lookup(embedding_params_masked, query)
 
         # Input Module
+        # encoded_story is Tensor("EntityNetwork/StoryEncoding/Sum:0", shape=(?, 10, 100), dtype=float32),
+        # where ? is for batch size
+        # 10 句话， 每句是一个100维的向量
         encoded_story = get_input_encoding(story_embedding, ones_initializer, 'StoryEncoding')
         encoded_query = get_input_encoding(query_embedding, ones_initializer, 'QueryEncoding')
 
         # Memory Module
         # We define the keys outside of the cell so they may be used for state initialization.
         # here is simply make keys random vectors.
-        keys = [tf.get_variable('key_{}'.format(j), [embedding_size]) for j in range(num_blocks)]
+        a_keys = [tf.get_variable('a_key_{}'.format(j), [embedding_size]) for j in range(num_blocks)]
+        b_keys = [tf.get_variable('b_key_{}'.format(j), [embedding_size]) for j in range(num_blocks)]
 
         # 现在就等于是要改一个DynamicMemoryCell，把这个做了
-        cell = DynamicMemoryCell(num_blocks, embedding_size, keys,
+        cell = DynamicMemoryCell(num_blocks, embedding_size, a_keys, b_keys,
             initializer=normal_initializer,
             activation=activation)
 
