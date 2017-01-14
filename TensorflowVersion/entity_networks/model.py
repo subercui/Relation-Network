@@ -21,8 +21,8 @@ def model_fn(features, labels, params, mode, scope=None):
     vocab_size = params['vocab_size']
     debug = params['debug']
 
-    story = features['story']
-    query = features['query']
+    story = features['story'] # shape (?, 10, 7) other words, (batch, sentences, words in a sentence)
+    query = features['query'] # (?, 1, 4)
 
     batch_size = tf.shape(story)[0]
 
@@ -34,31 +34,31 @@ def model_fn(features, labels, params, mode, scope=None):
     activation = partial(prelu, initializer=ones_initializer)
 
     # 这标志着要开始写实质性的模型了，所以加上这个scope
-    with tf.variable_scope(scope, 'EntityNetwork', initializer=normal_initializer):
+    with tf.variable_scope(scope, 'RelationNetwork', initializer=normal_initializer):
         # Embeddings
         # The embedding mask forces the special "pad" embedding to zeros.
-        embedding_params = tf.get_variable('embedding_params', [vocab_size, embedding_size])
+        embedding_params = tf.get_variable('embedding_params', [vocab_size, embedding_size]) #shape (22, 100)
         embedding_mask = tf.constant([0 if i == 0 else 1 for i in range(vocab_size)],
             dtype=tf.float32,
-            shape=[vocab_size, 1])
-        # this implies word mask is 0, and index 0 is encoded to [0, 0, 0, 0... 0]
+            shape=[vocab_size, 1]) # shape(22, 1), the "_pad" is 0, others are 1
+        # shape (22, 100), this implies word mask is 0, and index 0 is encoded to [0, 0, 0, 0... 0]
         embedding_params_masked = embedding_params * embedding_mask
 
-        story_embedding = tf.nn.embedding_lookup(embedding_params_masked, story)
-        query_embedding = tf.nn.embedding_lookup(embedding_params_masked, query)
+        story_embedding = tf.nn.embedding_lookup(embedding_params_masked, story) # shape (?, 10, 7, 100)
+        query_embedding = tf.nn.embedding_lookup(embedding_params_masked, query) # shape (?, 1, 4, 100)
 
         # Input Module
         # encoded_story is Tensor("EntityNetwork/StoryEncoding/Sum:0", shape=(?, 10, 100), dtype=float32),
         # where ? is for batch size
         # 10 句话， 每句是一个100维的向量
-        encoded_story = get_input_encoding(story_embedding, ones_initializer, 'StoryEncoding')
-        encoded_query = get_input_encoding(query_embedding, ones_initializer, 'QueryEncoding')
+        encoded_story = get_input_encoding(story_embedding, ones_initializer, 'StoryEncoding') # shape (?, 10, 100)
+        encoded_query = get_input_encoding(query_embedding, ones_initializer, 'QueryEncoding') # shape (?, 1, 100)
 
         # Memory Module
-        # We define the keys outside of the cell so they may be used for state initialization.
-        # here is simply make keys random vectors.
-        a_keys = [tf.get_variable('a_key_{}'.format(j), [embedding_size]) for j in range(num_blocks)]
-        b_keys = [tf.get_variable('b_key_{}'.format(j), [embedding_size]) for j in range(num_blocks)]
+        # TODO: We define the keys outside of the cell so they may be used for state initialization.? why using the key initialize states, did the article mention this?
+        # here simply makes keys random vectors.
+        a_keys = [tf.get_variable('a_key_{}'.format(j), [embedding_size]) for j in range(num_blocks)] # list of 20 keys, each is shape (100,)
+        b_keys = [tf.get_variable('b_key_{}'.format(j), [embedding_size]) for j in range(num_blocks)] # list of 20 keys, each is shape (100,)
 
         # 现在就等于是要改一个DynamicMemoryCell，把这个做了
         cell = DynamicMemoryCell(num_blocks, embedding_size, a_keys, b_keys,
@@ -66,11 +66,11 @@ def model_fn(features, labels, params, mode, scope=None):
             activation=activation)
 
         # Recurrence
-        initial_state = cell.zero_state(batch_size, tf.float32)
-        sequence_length = get_sequence_length(encoded_story)
+        initial_state = cell.zero_state(batch_size, tf.float32) # shape (?, 20*100 = 2000), which will be split into list in the cell
+        sequence_length = get_sequence_length(encoded_story) # shape (?,)
         _, last_state = tf.nn.dynamic_rnn(cell, encoded_story,
             sequence_length=sequence_length,
-            initial_state=initial_state)
+            initial_state=initial_state) # last_state shape (?, 2000)
 
         # Output Module
         output = get_output(last_state, encoded_query,
@@ -118,6 +118,7 @@ def get_output(last_state, encoded_query, num_blocks, vocab_size,
     Implementation of Section 2.3, Equation 6. This module is also described in more detail here:
     [End-To-End Memory Networks](https://arxiv.org/abs/1502.01852).
     """
+    # TODO: this module need re-implement for relation network.
     with tf.variable_scope(scope, 'Output', initializer=initializer):
         last_state = tf.pack(tf.split(1, num_blocks, last_state), axis=1)
         _, _, embedding_size = last_state.get_shape().as_list()

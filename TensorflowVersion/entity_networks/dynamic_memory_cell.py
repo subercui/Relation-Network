@@ -30,8 +30,10 @@ class DynamicMemoryCell(tf.nn.rnn_cell.RNNCell):
     def zero_state(self, batch_size, dtype):
         """
         We initialize the memory to the key values.
+        which return init states with the vlaue of init keys
         """
-        zero_state = tf.concat(1, [tf.expand_dims(key, 0) for key in self._keys])
+        # TODO: I don't understand why use keys to init states?! shouldn't states be initialized to zero or something?
+        zero_state = tf.concat(1, [tf.expand_dims(key, 0) for key in self._a_keys])
         zero_state_batch = tf.tile(zero_state, tf.pack([batch_size, 1]))
         return zero_state_batch
 
