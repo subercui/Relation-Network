@@ -18,6 +18,7 @@ from TensorflowVersion.entity_networks.model_utils import get_sequence_length
 def model_fn(features, labels, params, mode, scope=None):
     embedding_size = params['embedding_size']
     num_blocks = params['num_blocks']
+    num_entities = params['num_entities']
     vocab_size = params['vocab_size']
     debug = params['debug']
 
@@ -57,8 +58,12 @@ def model_fn(features, labels, params, mode, scope=None):
         # Memory Module
         # TODO: We define the keys outside of the cell so they may be used for state initialization.? why using the key initialize states, did the article mention this?
         # here simply makes keys random vectors.
-        a_keys = [tf.get_variable('a_key_{}'.format(j), [embedding_size]) for j in range(num_blocks)] # list of 20 keys, each is shape (100,)
-        b_keys = [tf.get_variable('b_key_{}'.format(j), [embedding_size]) for j in range(num_blocks)] # list of 20 keys, each is shape (100,)
+        ent_keys = [tf.get_variable('ent_key_{}'.format(j), [embedding_size]) for j in range(num_entities)]
+        a_keys, b_keys = [], [] # list of 36 keys, each is shape (100,)
+        for i in range(num_entities):
+            for j in range(num_entities):
+                a_keys.append(ent_keys[i])
+                b_keys.append(ent_keys[j])
 
         # 现在就等于是要改一个DynamicMemoryCell，把这个做了
         cell = DynamicMemoryCell(num_blocks, embedding_size, a_keys, b_keys,
@@ -73,7 +78,7 @@ def model_fn(features, labels, params, mode, scope=None):
             initial_state=initial_state) # last_state shape (?, 2000)
 
         # Output Module
-        output = get_output(last_state, encoded_query,
+        output = get_output(last_state, encoded_query, a_keys, b_keys,
             num_blocks=num_blocks,
             vocab_size=vocab_size,
             initializer=normal_initializer,
@@ -110,7 +115,7 @@ def get_input_encoding(embedding, initializer=None, scope=None):
         encoded_input = tf.reduce_sum(embedding * positional_mask, reduction_indices=[2])
         return encoded_input
 
-def get_output(last_state, encoded_query, num_blocks, vocab_size,
+def get_output(last_state, encoded_query, a_keys, b_keys, num_blocks, vocab_size,
         activation=tf.nn.relu,
         initializer=None,
         scope=None):
@@ -121,10 +126,11 @@ def get_output(last_state, encoded_query, num_blocks, vocab_size,
     # TODO: this module need re-implement for relation network.
     with tf.variable_scope(scope, 'Output', initializer=initializer):
         last_state = tf.pack(tf.split(1, num_blocks, last_state), axis=1)
+        a_keys = tf.pack(a_keys, axis=0)
         _, _, embedding_size = last_state.get_shape().as_list()
 
         # Use the encoded_query to attend over memories (hidden states of dynamic last_state cell blocks)
-        attention = tf.reduce_sum(last_state * encoded_query, reduction_indices=[2])
+        attention = tf.reduce_sum(last_state * encoded_query + a_keys * encoded_query, reduction_indices=[2])
 
         # Subtract max for numerical stability (softmax is shift invariant)
         attention_max = tf.reduce_max(attention, reduction_indices=[-1], keep_dims=True)
@@ -141,6 +147,16 @@ def get_output(last_state, encoded_query, num_blocks, vocab_size,
         q = tf.squeeze(encoded_query, squeeze_dims=[1])
         y = tf.matmul(activation(q + tf.matmul(u, H)), R)
         return y
+
+
+def get_output_enhanced(last_state, encoded_query, num_blocks, vocab_size,
+               activation=tf.nn.relu,
+               initializer=None,
+               scope=None):
+    """
+    Enhanced output for multi step reasoning.
+    """
+    return
 
 def get_loss(output, labels, mode):
     if mode == tf.contrib.learn.ModeKeys.INFER:

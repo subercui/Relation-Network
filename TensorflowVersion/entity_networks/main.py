@@ -21,14 +21,16 @@ FLAGS = tf.app.flags.FLAGS
 
 tf.app.flags.DEFINE_integer('batch_size', 32, 'Batch size.')
 tf.app.flags.DEFINE_integer('embedding_size', 100, 'Embedding size.')
-tf.app.flags.DEFINE_integer('num_blocks', 20, 'Number of memory blocks.')
+tf.app.flags.DEFINE_integer('num_entities', 6, 'Number of memory blocks.')
+tf.app.flags.DEFINE_integer('num_blocks', 36, 'Number of memory blocks.')
 tf.app.flags.DEFINE_integer('num_epochs', 200, 'Number of training epochs.')
 tf.app.flags.DEFINE_integer('seed', 67, 'Random seed.')
 tf.app.flags.DEFINE_integer('early_stopping_rounds', 10, 'Number of epochs before early stopping.')
 tf.app.flags.DEFINE_float('learning_rate', 1e-2, 'Base learning rate.')
 tf.app.flags.DEFINE_float('clip_gradients', 40.0, 'Clip the global norm of the gradients to this value.')
 tf.app.flags.DEFINE_string('model_dir', 'logs/', 'Model directory.')
-tf.app.flags.DEFINE_string('dataset', '../datasets/processed/qa1_single-supporting-fact_10k.json', 'Dataset path.')
+# tf.app.flags.DEFINE_string('dataset', '../datasets/processed/qa1_single-supporting-fact_10k.json', 'Dataset path.')
+tf.app.flags.DEFINE_string('dataset', '../datasets/processed/qa2_two-supporting-facts_10k.json', 'Dataset path.')
 tf.app.flags.DEFINE_boolean('debug', False, 'Debug mode to enable more summaries and numerical checks.')
 
 def main(_):
@@ -47,7 +49,8 @@ def main(_):
     params = {
         'vocab_size': dataset.vocab_size,
         'embedding_size': FLAGS.embedding_size,
-        'num_blocks': FLAGS.num_blocks,
+        'num_entities': FLAGS.num_entities,
+        'num_blocks': (FLAGS.num_entities) * FLAGS.num_entities,
         'learning_rate_init': FLAGS.learning_rate,
         'learning_rate_decay_steps': dataset.steps_per_epoch * 25,
         'learning_rate_decay_rate': 0.5,
