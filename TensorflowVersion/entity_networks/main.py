@@ -1,5 +1,10 @@
 """
 notes about models is written in model.py
+INFO:tensorflow:Validation (step 22456): loss = 0.467551, global_step = 22456, accuracy = 0.829
+INFO:tensorflow:loss = 0.483849, step = 22501
+INFO:tensorflow:global_step/sec: 0.729553
+INFO:tensorflow:loss = 0.301961, step = 22601
+INFO:tensorflow:global_step/sec: 0.838073
 """
 from __future__ import absolute_import
 from __future__ import print_function
@@ -26,7 +31,7 @@ tf.app.flags.DEFINE_integer('num_blocks', 36, 'Number of memory blocks.')
 tf.app.flags.DEFINE_integer('num_epochs', 200, 'Number of training epochs.')
 tf.app.flags.DEFINE_integer('seed', 67, 'Random seed.')
 tf.app.flags.DEFINE_integer('early_stopping_rounds', 10, 'Number of epochs before early stopping.')
-tf.app.flags.DEFINE_float('learning_rate', 1e-2, 'Base learning rate.')
+tf.app.flags.DEFINE_float('learning_rate', 1e-3, 'Base learning rate.')
 tf.app.flags.DEFINE_float('clip_gradients', 40.0, 'Clip the global norm of the gradients to this value.')
 tf.app.flags.DEFINE_string('model_dir', 'logs/', 'Model directory.')
 # tf.app.flags.DEFINE_string('dataset', '../datasets/processed/qa1_single-supporting-fact_10k.json', 'Dataset path.')

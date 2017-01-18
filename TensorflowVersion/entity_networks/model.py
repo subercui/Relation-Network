@@ -127,6 +127,7 @@ def get_output(last_state, encoded_query, a_keys, b_keys, num_blocks, vocab_size
     with tf.variable_scope(scope, 'Output', initializer=initializer):
         last_state = tf.pack(tf.split(1, num_blocks, last_state), axis=1)
         a_keys = tf.pack(a_keys, axis=0)
+        b_keys = tf.pack(b_keys, axis=0)
         _, _, embedding_size = last_state.get_shape().as_list()
 
         # Use the encoded_query to attend over memories (hidden states of dynamic last_state cell blocks)
@@ -138,7 +139,7 @@ def get_output(last_state, encoded_query, a_keys, b_keys, num_blocks, vocab_size
         attention = tf.expand_dims(attention, 2)
 
         # Weight memories by attention vectors
-        u = tf.reduce_sum(last_state * attention, reduction_indices=[1])
+        u = tf.reduce_sum(last_state * attention + b_keys * attention, reduction_indices=[1])
 
         # R acts as the decoder matrix to convert from internal state to the output vocabulary size
         R = tf.get_variable('R', [embedding_size, vocab_size])
