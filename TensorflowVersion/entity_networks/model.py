@@ -2,7 +2,7 @@
 """
 a_keys and b_keys are now just simply initialized as j random vectors
 """
-from __future__ import absolute_import
+# from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
 
@@ -11,9 +11,9 @@ import tensorflow as tf
 
 from functools import partial
 
-from TensorflowVersion.entity_networks.activations import prelu
-from TensorflowVersion.entity_networks.dynamic_memory_cell import DynamicMemoryCell
-from TensorflowVersion.entity_networks.model_utils import get_sequence_length
+from activations import prelu
+from dynamic_memory_cell import DynamicMemoryCell
+from model_utils import get_sequence_length
 
 def model_fn(features, labels, params, mode, scope=None):
     embedding_size = params['embedding_size']
