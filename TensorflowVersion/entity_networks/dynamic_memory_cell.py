@@ -92,3 +92,17 @@ class DynamicMemoryCell(tf.nn.rnn_cell.RNNCell):
                 next_states.append(state_j_next)
             state_next = tf.concat(1, next_states)
         return state_next, state_next
+
+class DynamicMemoryCell(tf.nn.rnn_cell.RNNCell):
+    """
+    Implementation of a dynamic memory cell as a gated recurrent network.
+    The cell's hidden state is divided into blocks and each block's weights are tied.
+    """
+
+    def __init__(self, num_blocks, num_units_per_block, a_keys, b_keys, initializer=None, activation=tf.nn.relu):
+        self._num_blocks = num_blocks  # M
+        self._num_units_per_block = num_units_per_block  # d
+        self._a_keys = a_keys
+        self._b_keys = b_keys
+        self._activation = activation  # \phi
+        self._initializer = initializer

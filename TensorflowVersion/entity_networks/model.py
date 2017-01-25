@@ -157,6 +157,17 @@ def get_output_enhanced(last_state, encoded_query, num_blocks, vocab_size,
     """
     Enhanced output for multi step reasoning.
     """
+    cell = outputcell(num_blocks, embedding_size, a_keys, b_keys,
+                             initializer=normal_initializer,
+                             activation=activation)
+
+    # Recurrence
+    initial_state = cell.zero_state(batch_size,
+                                    tf.float32)  # shape (?, 20*100 = 2000), which will be split into list in the cell
+    sequence_length = get_sequence_length(encoded_story)  # shape (?,)
+    answers, last_state = tf.nn.dynamic_rnn(cell, encoded_story,
+                                      sequence_length=sequence_length,
+                                      initial_state=initial_state)  # last_state shape (?, 2000)
     return
 
 def get_loss(output, labels, mode):
