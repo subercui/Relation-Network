@@ -6,7 +6,7 @@ INFO:tensorflow:global_step/sec: 0.729553
 INFO:tensorflow:loss = 0.301961, step = 22601
 INFO:tensorflow:global_step/sec: 0.838073
 """
-from __future__ import absolute_import
+# from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
 
@@ -19,15 +19,15 @@ import tensorflow as tf
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
-from TensorflowVersion.entity_networks.model import model_fn
-from TensorflowVersion.entity_networks.dataset import Dataset
+from model import model_fn
+from dataset import Dataset
 
 FLAGS = tf.app.flags.FLAGS
 
 tf.app.flags.DEFINE_integer('batch_size', 32, 'Batch size.')
 tf.app.flags.DEFINE_integer('embedding_size', 100, 'Embedding size.')
-tf.app.flags.DEFINE_integer('num_entities', 6, 'Number of memory blocks.')
-tf.app.flags.DEFINE_integer('num_blocks', 36, 'Number of memory blocks.')
+tf.app.flags.DEFINE_integer('num_entities', 10, 'Number of memory blocks.')
+tf.app.flags.DEFINE_integer('num_blocks', 100, 'Number of memory blocks.')
 tf.app.flags.DEFINE_integer('num_epochs', 200, 'Number of training epochs.')
 tf.app.flags.DEFINE_integer('seed', 67, 'Random seed.')
 tf.app.flags.DEFINE_integer('early_stopping_rounds', 10, 'Number of epochs before early stopping.')
